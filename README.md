@@ -26,7 +26,7 @@ The agent perceives traffic density at a 4-way intersection, reasons with **logi
 | 6 | _name_ | Simulation Engineer | [docs](docs/member-6-simulation.md) |
 | 7 | _name_ | UI/UX — Renderer | [docs](docs/member-7-renderer.md) |
 | 8 | Muhammet Baha | UI/UX — Controls & Dashboard | [docs](docs/member-8-controls.md) |
-| 9 | _name_ | Evaluation & Monitoring | [docs](docs/member-9-evaluation.md) |
+| 9 | Omar Albohi | Evaluation & Monitoring | [docs](docs/member-9-evaluation.md) |
 
 ---
 
