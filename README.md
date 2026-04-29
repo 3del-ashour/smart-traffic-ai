@@ -160,13 +160,22 @@ pytest
 
 ---
 
-## 📅 Timeline
+## 📅 Timeline (9-Day Crash Plan — Deadline 08.05.2025)
 
-| Week | Focus | Output |
-|------|-------|--------|
-| Week 1 | Setup + module skeletons | Empty classes with correct signatures |
-| Week 2 | Implementation | Each module fully working + tests pass |
-| Week 3 | Integration + report + demo | Full demo, comparison study, video |
+| Day | Date | Focus | Output |
+|-----|------|-------|--------|
+| 1 | Tue 29 Apr | Repo setup + everyone reads `PROJECT_PLAN.md` & `INTEGRATION_CONTRACTS.md` | Branches created, `config.py` finalized, empty class skeletons committed |
+| 2 | Wed 30 Apr | Each member implements core of their module in isolation | Member 6 (simulation) + Member 3 (logic) + Member 4 (math) draft pushed |
+| 3 | Thu 01 May | Continue implementation + first unit tests | Member 5 (optimization) + Member 7 (renderer) draft pushed |
+| 4 | Fri 02 May | Finish all module implementations | Member 2 (agent) + Member 8 (controls) + Member 9 (eval) draft pushed; all PRs open |
+| 5 | Sat 03 May | **First integration day** — wire everything in `main.py` | App runs end-to-end (even if rough); fix contract mismatches |
+| 6 | Sun 04 May | Bug fixing + AI vs Fixed-timer comparison experiment | Stable demo + comparison plots ready |
+| 7 | Mon 05 May | Polish UI + run full evaluation + draft report | Final demo build + report draft (Member 1 compiling) |
+| 8 | Tue 06 May | Record backup video + rehearse 7-min presentation | Video uploaded to YouTube + slides ready |
+| 9 | Wed 07 May | Final report polish + dry run of demo | Report finalized + everyone rehearsed |
+| 10 | Thu 08 May | **SUBMIT before 16:00** | Submission link + report uploaded |
+
+> **Critical rule:** every member must push **something working** by **end of Day 4 (Fri 02 May)** — no exceptions. Integration depends on it.
 
 ---
 
