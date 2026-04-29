@@ -20,7 +20,7 @@ The agent perceives traffic density at a 4-way intersection, reasons with **logi
 |---|------|------|---------------|
 | 1 | Adel Ashour | Project Manager & Integration Lead | [docs](docs/member-1-project-manager.md) |
 | 2 | _name_ | Lead Developer (Agent Architect) | [docs](docs/member-2-lead-developer.md) |
-| 3 | _name_ | Logic Engineer | [docs](docs/member-3-logic-engineer.md) |
+| 3 | Mustafa Hilmi Karaduman | Logic Engineer | [docs](docs/member-3-logic-engineer.md) |
 | 4 | Muftah Sharmado | Mathematical Modeler | [docs](docs/member-4-math-modeler.md) |
 | 5 | _name_ | Optimization Specialist | [docs](docs/member-5-optimization.md) |
 | 6 | _name_ | Simulation Engineer | [docs](docs/member-6-simulation.md) |
