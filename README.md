@@ -201,4 +201,3 @@ pytest
 
 ---
 
-> Built with ❤️ by 9 students for the Principles of AI course.
