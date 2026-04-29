@@ -99,7 +99,7 @@ smart-traffic-ai/
 
 ### Install & Run
 ```bash
-git clone https://github.com/<owner>/smart-traffic-ai.git
+git clone https://github.com/3del-ashour/smart-traffic-ai.git
 cd smart-traffic-ai
 pip install -r requirements.txt
 python main.py
