@@ -24,7 +24,7 @@ The agent perceives traffic density at a 4-way intersection, reasons with **logi
 | 4 | Muftah Sharmado | Mathematical Modeler | [docs](docs/member-4-math-modeler.md) |
 | 5 | Kürşat bayram | Optimization Specialist | [docs](docs/member-5-optimization.md) |
 | 6 | Abdulrahman Majthoub | Simulation Engineer | [docs](docs/member-6-simulation.md) |
-| 7 | _name_ | UI/UX — Renderer | [docs](docs/member-7-renderer.md) |
+| 7 | Mohammed sharif | UI/UX — Renderer | [docs](docs/member-7-renderer.md) |
 | 8 | Muhammet Baha | UI/UX — Controls & Dashboard | [docs](docs/member-8-controls.md) |
 | 9 | Omar Albohi | Evaluation & Monitoring | [docs](docs/member-9-evaluation.md) |
 
