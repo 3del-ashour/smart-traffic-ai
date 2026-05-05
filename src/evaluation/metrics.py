@@ -1,4 +1,7 @@
 """Metrics — owned by Member 9."""
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def compute_metrics(history: list) -> dict:
