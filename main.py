@@ -29,7 +29,9 @@ def main():
     running = True
 
     while running:
-        dt = clock.tick(SIMULATION_FPS) / 1000.0
+        # Apply simulation speed from slider
+        actual_fps = int(SIMULATION_FPS * controls.simulation_speed)
+        dt = clock.tick(actual_fps) / 1000.0
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -43,6 +45,9 @@ def main():
             controls.reset_requested = False
 
         if not controls.paused:
+            # Update arrival rate from slider
+            intersection.set_arrival_rate(controls.arrival_rate)
+            
             state = intersection.step(dt)
 
             if intersection.cycle_complete():
@@ -53,6 +58,9 @@ def main():
                     intersection.apply_timing(FIXED_PLAN)
 
             monitor.record(state)
+            
+            # Update chart with live wait time data
+            controls.update_chart(state.avg_wait_time)
 
         renderer.draw(intersection.get_state())
         controls.draw(renderer.screen, font)
