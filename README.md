@@ -14,6 +14,38 @@ The agent perceives traffic density at a 4-way intersection, reasons with **logi
 
 ---
 
+## 🎛️ Member 8 — Controls & Dashboard (Muhammet Baha)
+
+**Module:** `src/ui/controls.py` | **Branch:** `UIUpdateBaha`
+
+### What Was Built
+
+| Feature | Description |
+|---------|-------------|
+| **Pause/Play button** | Toggles `controls.paused` flag read by the main loop |
+| **Toggle AI/Fixed button** | Switches `controls.ai_mode` between AI-optimized and fixed-timer modes |
+| **Reset button** | Restarts simulation + clears the live chart |
+| **Arrival Rate slider** | 0.1 – 1.0 cars/sec — directly adjusts Poisson lambda in real time |
+| **Sim Speed slider** | 0.5x – 3.0x — scales the FPS clock so the simulation runs faster or slower |
+| **Live Wait-Time chart** | Rolling 50-point graph of `state.avg_wait_time` fed from the real simulation; auto-scaling Y-axis |
+| **Hover + click feedback** | All buttons and slider handles highlight on hover; buttons flash on click |
+| **Mode badge** | Green "AI MODE" / amber "FIXED TIMER" pill that updates instantly |
+| **Pause pill** | Red "PAUSED" badge visible only when simulation is frozen |
+
+### Public API (contract-compliant)
+
+```python
+controls.paused           # bool — main loop reads this
+controls.ai_mode          # bool — main loop reads this
+controls.arrival_rate     # float — passed to intersection.set_arrival_rate()
+controls.simulation_speed # float — multiplied with SIMULATION_FPS
+controls.handle_event(event)  # → None  (INTEGRATION_CONTRACTS signature)
+controls.draw(screen, font)   # → None
+controls.update_chart(avg_wait_time)  # call each frame when not paused
+```
+
+---
+
 ## 👥 Team Members & Roles
 
 | # | Name | Role | Personal Plan |
