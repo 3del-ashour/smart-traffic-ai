@@ -11,7 +11,7 @@ from src.simulation.vehicle import Vehicle
 
 
 class Intersection:
-    def __init__(self):
+    def __init__(self, arrival_rate=ARRIVAL_RATE_DEFAULT):
         self.queues = {d: [] for d in Direction}
         self.lights = {d: LightState.RED for d in Direction}
         self.lights[Direction.NORTH] = LightState.GREEN
@@ -23,6 +23,7 @@ class Intersection:
         self.total_wait = 0.0
         self.current_phase_dir = Direction.NORTH
         self._just_completed_cycle = False
+        self.arrival_rate = arrival_rate
 
     def step(self, dt: float) -> IntersectionState:
         self.elapsed += dt
@@ -30,7 +31,7 @@ class Intersection:
         self._just_completed_cycle = False
 
         for d in Direction:
-            n = sample_arrivals(ARRIVAL_RATE_DEFAULT, dt)
+            n = sample_arrivals(self.arrival_rate, dt)
             for _ in range(n):
                 self.queues[d].append(Vehicle(d, self.elapsed))
 
@@ -64,6 +65,10 @@ class Intersection:
 
     def apply_timing(self, plan: TimingPlan) -> None:
         self.timing = dict(plan.durations)
+
+    def set_arrival_rate(self, rate: float) -> None:
+        """Update the arrival rate for traffic generation."""
+        self.arrival_rate = rate
 
     def get_state(self) -> IntersectionState:
         avg = self.total_wait / max(1, self.passed)
