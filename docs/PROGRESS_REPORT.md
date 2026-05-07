@@ -3,7 +3,7 @@
 > **For Member 10 (Report & Presentation Specialist)**
 > Compiled: 2026-05-07 (final-day snapshot)
 > Repo: https://github.com/3del-ashour/smart-traffic-ai
-> Test status: **115 / 115 passing**
+> Test status: **125 / 125 passing**
 > Demo status: **End-to-end pipeline verified (Intersection → Agent → Logic → SA → Renderer)**
 
 ---
@@ -144,19 +144,27 @@ Penalises plans that under-serve high-density lanes.
 ---
 
 ### ✅ Member 6 — Abdulrahman (Simulation Engineer)
-**File:** `src/simulation/intersection.py`
+**Files:** `src/simulation/intersection.py`, `src/simulation/vehicle.py`, `src/simulation/traffic_generator.py` (PR #15 merged)
 
-Maintains the simulated 4-way intersection.
+Maintains the simulated 4-way intersection — refactored into three focused modules.
 
-**Public API:**
+**Public API (used by every other member):**
 ```python
-intersection.step(dt)          # advance simulation by dt seconds
-intersection.apply_timing(plan)# install a TimingPlan from the agent
-intersection.get_state()       # snapshot for the agent/renderer
+intersection.step(dt)              # advance simulation by dt seconds
+intersection.apply_timing(plan)    # install a TimingPlan from the agent
+intersection.set_arrival_rate(r)   # live-update from dashboard slider
+intersection.cycle_complete()      # signals the agent to re-plan
+intersection.get_state()           # snapshot for the agent/renderer
 ```
-Cars arrive via a Poisson process, queue per lane, and clear when their light is green.
 
-> **Note:** Module is functional and integrated, but commits are minimal — most of the simulation code is from the Day-1 scaffold.
+**His improvements over the scaffold:**
+- New `Vehicle` class with precise wait-time tracking (per-car telemetry for Member 9)
+- `traffic_generator.generate_arrivals(rate, dt, burst=True)` — burst mode triples lambda for stress-demo
+- Lane-capacity cap (`MAX_CARS_PER_LANE = 30`) so queues never overflow physical lanes
+- `peak_density` telemetry for the evaluation report
+- Phase-transition logging via Python's `logging` module
+
+**Tests:** 12 passing (`tests/test_simulation.py`)
 
 ---
 
@@ -225,9 +233,9 @@ Quantifies how well the AI performs.
 | Logic | `tests/test_logic.py` | 55 | ✅ |
 | Math | `tests/test_math.py` | 26 | ✅ |
 | Optimization | `tests/test_optimization.py` | 15 | ✅ |
+| Simulation | `tests/test_simulation.py` | 12 | ✅ |
 | Evaluation | `tests/test_evaluation.py` | 15 | ✅ |
-| Integration smoke | (manual) | 1 | ✅ |
-| **Total** | | **115** | **✅ all green** |
+| **Total** | | **125** | **✅ all green** |
 
 ```bash
 $ python3 -m pytest -q
