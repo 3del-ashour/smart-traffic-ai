@@ -3,7 +3,7 @@
 > **For Member 10 (Report & Presentation Specialist)**
 > Compiled: 2026-05-07 (final-day snapshot)
 > Repo: https://github.com/3del-ashour/smart-traffic-ai
-> Test status: **125 / 125 passing**
+> Test status: **133 / 133 passing**
 > Demo status: **End-to-end pipeline verified (Intersection → Agent → Logic → SA → Renderer)**
 
 ---
@@ -171,17 +171,28 @@ intersection.get_state()           # snapshot for the agent/renderer
 ### ✅ Member 7 — Mohammed Sharif (Renderer)
 **File:** `src/ui/renderer.py`
 
-Pygame-based real-time visualisation.
+Pygame-based real-time visualisation — fully polished for the demo.
 
 **Renders:**
-- 4-way intersection roads
-- Queued cars per lane (count = density)
-- Traffic-light states (RED / YELLOW / GREEN)
-- HUD showing cycle, wait time, total cars passed
+- Asphalt roads with painted dashed lane dividers and dark edge stripes
+- Stylised cars with body, windscreen, and headlights — varied colour palette
+- White stop lines + zebra crosswalks at every approach
+- Three-bulb traffic-light housings (RED / YELLOW / GREEN) with a pulsing
+  glow halo on the active bulb
+- Compass-style direction labels (N / S / E / W)
+- Translucent HUD panel showing **AI / FIXED** mode badge, cycle, phase
+  time, average wait, cars passed, and the lane currently receiving
+  green priority
 
 **Window:** 900 × 700 px
 
-> **Note:** Module is functional, but commits are minimal — mostly scaffold.
+**Public API (unchanged for backward compatibility):**
+```python
+renderer.draw(state, ai_mode=True, priority=Direction.EAST)
+```
+
+**Tests:** 8 passing (`tests/test_renderer.py`) — runs headlessly via
+SDL's dummy video driver so it works in CI.
 
 **Demo screenshot:** `docs/demo_screenshot.png`
 
@@ -234,8 +245,9 @@ Quantifies how well the AI performs.
 | Math | `tests/test_math.py` | 26 | ✅ |
 | Optimization | `tests/test_optimization.py` | 15 | ✅ |
 | Simulation | `tests/test_simulation.py` | 12 | ✅ |
+| Renderer | `tests/test_renderer.py` | 8 | ✅ |
 | Evaluation | `tests/test_evaluation.py` | 15 | ✅ |
-| **Total** | | **125** | **✅ all green** |
+| **Total** | | **133** | **✅ all green** |
 
 ```bash
 $ python3 -m pytest -q

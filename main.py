@@ -28,6 +28,9 @@ def main():
     clock = pygame.time.Clock()
     running = True
 
+    # Track which direction the agent prioritised on the last cycle (for HUD)
+    last_priority: Direction | None = None
+
     while running:
         # Apply simulation speed from slider
         actual_fps = int(SIMULATION_FPS * controls.simulation_speed)
@@ -54,15 +57,22 @@ def main():
                 if controls.ai_mode:
                     plan = agent.act(state)
                     intersection.apply_timing(plan)
+                    # The lane that received the most green time this cycle
+                    last_priority = max(plan.durations, key=plan.durations.get)
                 else:
                     intersection.apply_timing(FIXED_PLAN)
+                    last_priority = None
 
             monitor.record(state)
             
             # Update chart with live wait time data
             controls.update_chart(state.avg_wait_time)
 
-        renderer.draw(intersection.get_state())
+        renderer.draw(
+            intersection.get_state(),
+            ai_mode=controls.ai_mode,
+            priority=last_priority,
+        )
         controls.draw(renderer.screen, font)
         pygame.display.flip()
 
