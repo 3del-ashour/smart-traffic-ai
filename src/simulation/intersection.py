@@ -16,6 +16,7 @@ from config import (
     IntersectionState,
     LightState,
     MAX_CARS_PER_LANE,
+    MIN_GREEN_TIME,
     TimingPlan,
 )
 from src.math_models.probability import sample_arrivals
@@ -80,8 +81,25 @@ class Intersection:
                 self.total_wait += v.wait_time
                 self.passed += 1
 
-        # 4. Phase transition when the timer expires
-        if self.phase_time >= self.timing[self.current_phase_dir]:
+        # 4. Phase transition
+        #    a) Normal end-of-phase: timer expired
+        #    b) Smart early-skip: current green lane is empty AND some other
+        #       lane has cars waiting AND we've already served the minimum
+        #       green time. Without this, an empty lane holds green for the
+        #       full duration while busy lanes wait.
+        timer_expired = self.phase_time >= self.timing[self.current_phase_dir]
+        current_empty = len(self.queues[self.current_phase_dir]) == 0
+        others_have_demand = any(
+            len(self.queues[d]) > 0
+            for d in Direction
+            if d is not self.current_phase_dir
+        )
+        early_skip = (
+            current_empty
+            and others_have_demand
+            and self.phase_time >= MIN_GREEN_TIME
+        )
+        if timer_expired or early_skip:
             self._next_phase()
 
         return self.get_state()
@@ -90,24 +108,42 @@ class Intersection:
     # Phase transition
     # ------------------------------------------------------------------
     def _next_phase(self):
-        """Rotate green light to the next direction (round-robin)."""
+        """Pick the next green lane.
+
+        Priority order:
+          1. The non-current lane with the largest queue (demand-driven).
+          2. If every other lane is also empty, fall back to plain
+             round-robin so the simulation always makes progress.
+        Cycle counter still advances every 4 transitions, so the agent's
+        cycle_complete() trigger continues to fire on the same cadence.
+        """
         order = list(Direction)
-        idx = (order.index(self.current_phase_dir) + 1) % 4
+        prev = self.current_phase_dir
+        idx = (order.index(prev) + 1) % 4
+        round_robin_next = order[idx]
 
-        logger.info(
-            "Transition: %s -> %s",
-            self.current_phase_dir.name,
-            order[idx].name,
-        )
+        # Demand-driven choice across the other three lanes
+        candidates = [d for d in Direction if d is not prev]
+        busiest = max(candidates, key=lambda d: len(self.queues[d]))
+        if len(self.queues[busiest]) > 0:
+            chosen = busiest
+        else:
+            chosen = round_robin_next  # everyone empty → just rotate
 
-        self.lights[self.current_phase_dir] = LightState.RED
-        self.current_phase_dir = order[idx]
-        self.lights[self.current_phase_dir] = LightState.GREEN
+        logger.info("Transition: %s -> %s", prev.name, chosen.name)
+
+        self.lights[prev] = LightState.RED
+        self.current_phase_dir = chosen
+        self.lights[chosen] = LightState.GREEN
         self.phase_time = 0
 
-        if idx == 0:
+        # Cycle counter: increments after every 4 transitions regardless of
+        # which direction was picked, so the agent re-plans on a fixed cadence.
+        self._transitions_since_cycle = getattr(self, "_transitions_since_cycle", 0) + 1
+        if self._transitions_since_cycle >= 4:
             self.cycle += 1
             self._just_completed_cycle = True
+            self._transitions_since_cycle = 0
 
     # Backwards-compatible alias (some tests / docs reference this name)
     def _transition_phase(self):

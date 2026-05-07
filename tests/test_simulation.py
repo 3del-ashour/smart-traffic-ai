@@ -98,6 +98,53 @@ def test_cycle_complete_flag():
     assert completed_once
 
 
+# ── Smart phase selection (the bug fix) ──────────────────────────────────
+
+def test_empty_lane_yields_to_busy_lane():
+    """An empty green lane must yield to a busy lane after MIN_GREEN_TIME."""
+    from config import LightState, MIN_GREEN_TIME
+    from src.simulation.vehicle import Vehicle
+
+    inter = Intersection(arrival_rate=0.0)  # no random arrivals
+    inter.current_phase_dir = Direction.EAST
+    for d in Direction:
+        inter.lights[d] = LightState.RED
+    inter.lights[Direction.EAST] = LightState.GREEN
+    inter.queues[Direction.NORTH] = [Vehicle(Direction.NORTH, 0.0) for _ in range(8)]
+
+    # Step through enough time to pass MIN_GREEN_TIME
+    for _ in range(MIN_GREEN_TIME + 2):
+        inter.step(1.0)
+
+    assert inter.lights[Direction.NORTH] == LightState.GREEN
+    assert inter.lights[Direction.EAST] == LightState.RED
+
+
+def test_next_phase_picks_busiest_lane():
+    """When the timer expires, the chosen direction should be the one with the most cars."""
+    from src.simulation.vehicle import Vehicle
+
+    inter = Intersection(arrival_rate=0.0)
+    inter.current_phase_dir = Direction.NORTH
+    inter.queues[Direction.SOUTH] = [Vehicle(Direction.SOUTH, 0.0) for _ in range(2)]
+    inter.queues[Direction.WEST] = [Vehicle(Direction.WEST, 0.0) for _ in range(9)]
+    inter.queues[Direction.EAST] = [Vehicle(Direction.EAST, 0.0) for _ in range(4)]
+
+    inter._next_phase()
+
+    assert inter.current_phase_dir == Direction.WEST   # 9 > 4 > 2
+
+
+def test_all_empty_falls_back_to_round_robin():
+    """If every lane is empty, just rotate to keep the simulation alive."""
+    inter = Intersection(arrival_rate=0.0)
+    inter.current_phase_dir = Direction.NORTH
+    # all queues empty
+    inter._next_phase()
+    # Round-robin: NORTH → SOUTH next
+    assert inter.current_phase_dir == Direction.SOUTH
+
+
 # ── Vehicle ──────────────────────────────────────────────────────────────
 
 def test_vehicle_basic_fields():

@@ -53,11 +53,14 @@ def main():
             
             state = intersection.step(dt)
 
-            if intersection.cycle_complete():
+            # Re-plan whenever a phase boundary is hit (i.e. phase_time was
+            # just reset to 0). This makes the AI react every ~10–60 s
+            # instead of only once per full rotation.
+            phase_just_changed = state.current_phase_time == 0
+            if phase_just_changed or intersection.cycle_complete():
                 if controls.ai_mode:
                     plan = agent.act(state)
                     intersection.apply_timing(plan)
-                    # The lane that received the most green time this cycle
                     last_priority = max(plan.durations, key=plan.durations.get)
                 else:
                     intersection.apply_timing(FIXED_PLAN)
