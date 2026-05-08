@@ -188,7 +188,7 @@ class Controls:
         self.paused = False
         self.ai_mode = True
         self.reset_requested = False
-        self.arrival_rate = 0.3
+        self.arrival_rate = 0.15   # moderate flow by default — easy to follow visually
         self.simulation_speed = 1.0
         
         # Buttons with improved layout
@@ -202,7 +202,7 @@ class Controls:
         # Sliders
         slider_y = 700
         self.sliders = [
-            Slider(20, slider_y, 200, 0.1, 1.0, 0.3, "Arrival Rate"),
+            Slider(20, slider_y, 200, 0.05, 1.0, 0.15, "Arrival Rate"),
             Slider(240, slider_y, 200, 0.5, 3.0, 1.0, "Sim Speed"),
         ]
         
