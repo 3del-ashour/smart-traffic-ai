@@ -98,6 +98,61 @@ def test_cycle_complete_flag():
     assert completed_once
 
 
+# ── Yellow phase ─────────────────────────────────────────────────────────
+
+def test_yellow_phase_inserted_between_green_and_red():
+    """A green phase ends with a YELLOW window before the next direction goes green."""
+    from config import LightState, YELLOW_DURATION
+    from src.simulation.vehicle import Vehicle
+
+    inter = Intersection(arrival_rate=0.0)
+    inter.timing = {d: 3 for d in Direction}        # short green so we hit the boundary fast
+    # Add demand on every other lane so early-skip / next-phase has somewhere to go
+    for d in (Direction.SOUTH, Direction.EAST, Direction.WEST):
+        inter.queues[d] = [Vehicle(d, 0.0)]
+
+    # Step until the green direction's light turns YELLOW
+    saw_yellow = False
+    saw_red_after_yellow = False
+    prev_dir = inter.current_phase_dir
+    for _ in range(60):
+        inter.step(0.5)
+        if inter.lights[prev_dir] == LightState.YELLOW:
+            saw_yellow = True
+        if saw_yellow and inter.lights[prev_dir] == LightState.RED:
+            saw_red_after_yellow = True
+            break
+
+    assert saw_yellow,            "expected the outgoing direction to flash YELLOW"
+    assert saw_red_after_yellow,  "expected YELLOW → RED after the yellow window"
+
+
+def test_no_throughput_during_yellow():
+    """Cars must not pass while the light is YELLOW."""
+    from config import LightState
+    from src.simulation.vehicle import Vehicle
+
+    inter = Intersection(arrival_rate=0.0)
+    inter.queues[Direction.NORTH] = [Vehicle(Direction.NORTH, 0.0) for _ in range(5)]
+    # Force into yellow state for NORTH
+    inter.lights[Direction.NORTH] = LightState.YELLOW
+    inter._in_yellow = True
+    inter.phase_time = 0
+    inter.current_phase_dir = Direction.NORTH
+
+    before = inter.passed
+    # Step a sub-second amount — even though int(elapsed) ticks over, no car passes
+    for _ in range(3):
+        inter.step(0.5)
+    # The phase should have transitioned out of yellow at some point, but cars
+    # released after that come from the NEW green direction — not NORTH.
+    # NORTH's queue must NOT have shrunk during the YELLOW window.
+    assert before == 0
+    # And after enough time passes, eventually the new direction releases cars
+    # but not from NORTH (no other queues populated → none should pass)
+    assert inter.passed == 0
+
+
 # ── Smart phase selection (the bug fix) ──────────────────────────────────
 
 def test_empty_lane_yields_to_busy_lane():
