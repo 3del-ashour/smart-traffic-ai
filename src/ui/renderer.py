@@ -24,9 +24,11 @@ from config import Direction, IntersectionState, LightState
 # ---------------------------------------------------------------------------
 # Window / palette
 # ---------------------------------------------------------------------------
-WIDTH, HEIGHT = 900, 700
+WIDTH, HEIGHT = 900, 760
 ROAD_WIDTH = 140
-CENTER = (WIDTH // 2, HEIGHT // 2)
+# Render the intersection in the upper region so the bottom 200 px is reserved
+# for the dashboard (sliders, buttons, chart).
+CENTER = (WIDTH // 2, 280)
 
 PALETTE = {
     "grass":        (34, 139, 70),
