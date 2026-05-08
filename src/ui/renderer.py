@@ -86,6 +86,16 @@ class Renderer:
             if (i * j) % 7 == 0
         ]
 
+        # ── Crossing-car animation state ────────────────────────────────
+        # Each entry: {"dir": Direction, "color": (r,g,b), "start_ms": int}
+        self._crossings: list[dict] = []
+        # Last total_cars_passed observed — diff against state to detect new crossings
+        self._last_passed: int = 0
+        # Picks a deterministic but varied colour for each new crossing
+        self._cross_counter: int = 0
+        # Time it takes a car to cross the intersection (ms of real time)
+        self._cross_duration_ms: int = 900
+
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
@@ -102,12 +112,14 @@ class Renderer:
         HUD shows the live mode and which direction the optimiser favoured.
         """
         self._frame += 1
+        self._update_crossings(state)
         self._draw_grass()
         self._draw_roads()
         self._draw_lane_paint()
         self._draw_stop_lines_and_crosswalks()
         self._draw_direction_labels()
         self._draw_cars(state)
+        self._draw_crossings()
         self._draw_lights(state)
         self._draw_hud(state, ai_mode=ai_mode, priority=priority)
 
@@ -268,6 +280,90 @@ class Renderer:
             pygame.draw.rect(self.screen, (40, 60, 90), (x + 15, y + 4, 6, 10), border_radius=2)
             pygame.draw.circle(self.screen, (255, 240, 180), (x + 23, y + 4),  2)
             pygame.draw.circle(self.screen, (255, 240, 180), (x + 23, y + 14), 2)
+
+    # ------------------------------------------------------------------
+    # Crossing-car animation
+    # ------------------------------------------------------------------
+    def _update_crossings(self, state: IntersectionState) -> None:
+        """Detect newly-passed cars and queue an animation for each."""
+        # 1. Detect newly-passed cars since the last frame
+        diff = state.total_cars_passed - self._last_passed
+        self._last_passed = state.total_cars_passed
+        # Sometimes diff is negative (e.g. after Reset) — clamp
+        if diff < 0:
+            diff = 0
+
+        if diff > 0:
+            # Pick the lane currently on green — that's where the car came from
+            green_dir = next(
+                (d for d in Direction if state.light_states[d] is LightState.GREEN),
+                None,
+            )
+            if green_dir is not None:
+                now = pygame.time.get_ticks()
+                for _ in range(diff):
+                    colour = CAR_COLOURS[self._cross_counter % len(CAR_COLOURS)]
+                    self._cross_counter += 1
+                    self._crossings.append({
+                        "dir": green_dir,
+                        "color": colour,
+                        "start_ms": now,
+                    })
+
+        # 2. Drop any crossings that finished (>= 1.0 progress)
+        now = pygame.time.get_ticks()
+        self._crossings = [
+            c for c in self._crossings
+            if (now - c["start_ms"]) < self._cross_duration_ms
+        ]
+
+    def _draw_crossings(self) -> None:
+        """Render every in-flight crossing car at its current position."""
+        cx, cy = CENTER
+        half = ROAD_WIDTH // 2
+        now = pygame.time.get_ticks()
+
+        for c in self._crossings:
+            p = (now - c["start_ms"]) / self._cross_duration_ms   # 0.0 → 1.0
+            if p < 0.0:
+                p = 0.0
+            elif p > 1.0:
+                p = 1.0
+
+            d = c["dir"]
+            colour = c["color"]
+
+            # Cars in queue d came FROM that direction → they cross going
+            # toward the OPPOSITE side. We lerp from the stop line on side d
+            # to a point well past the opposite stop line.
+            if d is Direction.NORTH:
+                # Came from north — heading south (top → bottom)
+                start_y = cy - half - 4
+                end_y = cy + half + 60
+                x = cx - 35   # left half of the vertical road (south-bound lane)
+                y = start_y + (end_y - start_y) * p
+                self._car_vertical(int(x), int(y), colour, facing="south")
+            elif d is Direction.SOUTH:
+                # Came from south — heading north (bottom → top)
+                start_y = cy + half + 4
+                end_y = cy - half - 60 - 20
+                x = cx + 5
+                y = start_y + (end_y - start_y) * p
+                self._car_vertical(int(x), int(y), colour, facing="north")
+            elif d is Direction.EAST:
+                # Came from east — heading west (right → left)
+                start_x = cx + half + 4
+                end_x = cx - half - 60 - 24
+                y = cy - 35
+                x = start_x + (end_x - start_x) * p
+                self._car_horizontal(int(x), int(y), colour, facing="west")
+            elif d is Direction.WEST:
+                # Came from west — heading east (left → right)
+                start_x = cx - half - 4 - 24
+                end_x = cx + half + 60
+                y = cy + 5
+                x = start_x + (end_x - start_x) * p
+                self._car_horizontal(int(x), int(y), colour, facing="east")
 
     # ------------------------------------------------------------------
     # Traffic lights

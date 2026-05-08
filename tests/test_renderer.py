@@ -121,3 +121,35 @@ def test_many_frames_animation_counter_progresses():
     for _ in range(30):
         r.draw(state)
     assert r._frame == start + 30
+
+
+def _green_only(direction):
+    return {d: (LightState.GREEN if d is direction else LightState.RED) for d in Direction}
+
+
+def test_crossing_animation_spawned_when_cars_pass():
+    """When total_cars_passed increases on a green lane, a crossing must be queued."""
+    r = Renderer()
+    densities = {Direction.NORTH: 5, Direction.SOUTH: 0, Direction.EAST: 0, Direction.WEST: 0}
+
+    # First frame: 0 cars passed → no crossings
+    r.draw(_state(densities=densities, lights=_green_only(Direction.NORTH), total_cars_passed=0))
+    assert r._crossings == []
+
+    # Second frame: 1 car passed → exactly one crossing animation queued
+    densities[Direction.NORTH] = 4
+    r.draw(_state(densities=densities, lights=_green_only(Direction.NORTH), total_cars_passed=1))
+    assert len(r._crossings) == 1
+    assert r._crossings[0]["dir"] == Direction.NORTH
+
+
+def test_crossing_animation_ignores_negative_diff_after_reset():
+    """After a reset (cars_passed drops to 0), no spurious crossings."""
+    r = Renderer()
+    r._last_passed = 50
+    r.draw(_state(
+        densities={d: 0 for d in Direction},
+        lights=_green_only(Direction.NORTH),
+        total_cars_passed=0,
+    ))
+    assert r._crossings == []
