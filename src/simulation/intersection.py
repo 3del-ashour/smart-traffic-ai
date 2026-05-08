@@ -18,6 +18,7 @@ from config import (
     MAX_CARS_PER_LANE,
     MIN_GREEN_TIME,
     TimingPlan,
+    YELLOW_DURATION,
 )
 from src.math_models.probability import sample_arrivals
 from src.simulation.vehicle import Vehicle
@@ -41,6 +42,10 @@ class Intersection:
         self.elapsed = 0.0
         self.current_phase_dir = Direction.NORTH
         self._just_completed_cycle = False
+
+        # Yellow-phase state. When True, the current direction is on YELLOW;
+        # phase_time is counting down YELLOW_DURATION before the rotation.
+        self._in_yellow = False
 
         # Arrival model (live-tunable from the dashboard)
         self.arrival_rate = arrival_rate
@@ -75,38 +80,51 @@ class Intersection:
                 v.wait_time += dt
 
         # 3. Throughput on the green lane (1 car / sec)
-        if int(self.elapsed) > int(self.elapsed - dt):
+        #    Cars only cross while the light is GREEN — never on YELLOW or RED.
+        if (
+            not self._in_yellow
+            and self.lights[self.current_phase_dir] is LightState.GREEN
+            and int(self.elapsed) > int(self.elapsed - dt)
+        ):
             if self.queues[self.current_phase_dir]:
                 v = self.queues[self.current_phase_dir].pop(0)
                 self.total_wait += v.wait_time
                 self.passed += 1
 
-        # 4. Phase transition
-        #    a) Normal end-of-phase: timer expired
-        #    b) Smart early-skip: current green lane is empty AND some other
-        #       lane has cars waiting AND we've already served the minimum
-        #       green time. Without this, an empty lane holds green for the
-        #       full duration while busy lanes wait.
-        timer_expired = self.phase_time >= self.timing[self.current_phase_dir]
-        current_empty = len(self.queues[self.current_phase_dir]) == 0
-        others_have_demand = any(
-            len(self.queues[d]) > 0
-            for d in Direction
-            if d is not self.current_phase_dir
-        )
-        early_skip = (
-            current_empty
-            and others_have_demand
-            and self.phase_time >= MIN_GREEN_TIME
-        )
-        if timer_expired or early_skip:
-            self._next_phase()
+        # 4. Phase machine: GREEN → YELLOW → (next) GREEN
+        if self._in_yellow:
+            # Currently amber-warning the cars; rotate when the timer is up
+            if self.phase_time >= YELLOW_DURATION:
+                self._next_phase()
+        else:
+            # Currently green — decide whether to begin the yellow transition
+            timer_expired = self.phase_time >= self.timing[self.current_phase_dir]
+            current_empty = len(self.queues[self.current_phase_dir]) == 0
+            others_have_demand = any(
+                len(self.queues[d]) > 0
+                for d in Direction
+                if d is not self.current_phase_dir
+            )
+            early_skip = (
+                current_empty
+                and others_have_demand
+                and self.phase_time >= MIN_GREEN_TIME
+            )
+            if timer_expired or early_skip:
+                self._begin_yellow()
 
         return self.get_state()
 
     # ------------------------------------------------------------------
     # Phase transition
     # ------------------------------------------------------------------
+    def _begin_yellow(self) -> None:
+        """Switch the current GREEN lane to YELLOW and start the warning timer."""
+        self.lights[self.current_phase_dir] = LightState.YELLOW
+        self.phase_time = 0
+        self._in_yellow = True
+        logger.info("Yellow: %s", self.current_phase_dir.name)
+
     def _next_phase(self):
         """Pick the next green lane.
 
@@ -136,6 +154,7 @@ class Intersection:
         self.current_phase_dir = chosen
         self.lights[chosen] = LightState.GREEN
         self.phase_time = 0
+        self._in_yellow = False
 
         # Cycle counter: increments after every 4 transitions regardless of
         # which direction was picked, so the agent re-plans on a fixed cadence.

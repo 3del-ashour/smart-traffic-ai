@@ -40,6 +40,7 @@ class TimingPlan:
 MAX_CARS_PER_LANE = 30
 MIN_GREEN_TIME = 10
 MAX_GREEN_TIME = 60
+YELLOW_DURATION = 2          # seconds: light stays YELLOW before turning RED
 SIMULATION_FPS = 30
 ARRIVAL_RATE_DEFAULT = 0.3   # cars per second (Poisson lambda)
 
