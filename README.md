@@ -59,6 +59,7 @@ controls.update_chart(avg_wait_time)  # call each frame when not paused
 | 7 | Mohammed sharif | UI/UX — Renderer | [docs](docs/member-7-renderer.md) |
 | 8 | Muhammet Baha | UI/UX — Controls & Dashboard | [docs](docs/member-8-controls.md) |
 | 9 | Omar Albohi | Evaluation & Monitoring | [docs](docs/member-9-evaluation.md) |
+| 10 | Muhammad Hammad | Report & Presentation Specialist | [docs](docs/PROGRESS_REPORT.md) |
 
 ---
 
